@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ApiResponse } from '../types/api';
 import { Copy, Download } from 'lucide-react';
+import '../styles/index.css';
 
 interface ResponseViewerProps {
 	response: ApiResponse | null;
@@ -9,25 +10,6 @@ interface ResponseViewerProps {
 
 export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 	const [activeTab, setActiveTab] = useState<'body' | 'headers'>('body');
-
-	if (loading) {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<div className="text-center">
-					<div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-					<p className="text-gray-500 dark:text-gray-400">Sending request...</p>
-				</div>
-			</div>
-		);
-	}
-
-	if (!response) {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<p className="text-gray-500 dark:text-gray-400">No response yet</p>
-			</div>
-		);
-	}
 
 	const formatJson = (data: any) => {
 		try {
@@ -62,36 +44,55 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 	};
 
+	if (loading) {
+		return (
+			<div className="loading-container">
+				<div className="loading-content">
+					<div className="response-viewer-loading-spinner"></div>
+					<p className="loading-text">Sending request...</p>
+				</div>
+			</div>
+		);
+	}
+
+	if (!response) {
+		return (
+			<div className="loading-container">
+				<p className="loading-text">No response yet</p>
+			</div>
+		);
+	}
+
 	return (
-		<div className="flex flex-col h-full">
-			<div className="p-4 border-b border-gray-200 dark:border-gray-700">
-				<div className="flex items-center justify-between mb-2">
-					<div className="flex items-center space-x-4">
-						<div className="flex items-center space-x-2">
-							<span className="text-sm font-medium">Status:</span>
-							<span className={`font-medium ${getStatusClass(response.status)}`}>
+		<div className="response-viewer-container">
+			<div className="response-viewer-header">
+				<div className="response-viewer-status-row">
+					<div className="response-viewer-status-info">
+						<div className="response-viewer-status-item">
+							<span className="response-viewer-status-label">Status:</span>
+							<span className={`response-viewer-status-code ${getStatusClass(response.status)}`}>
 								{response.status} {response.statusText}
 							</span>
 						</div>
-						<div className="flex items-center space-x-2">
-							<span className="text-sm font-medium">Time:</span>
-							<span className="text-sm">{response.responseTime}ms</span>
+						<div className="response-viewer-status-item">
+							<span className="response-viewer-status-label">Time:</span>
+							<span className="response-viewer-status-value">{response.responseTime}ms</span>
 						</div>
-						<div className="flex items-center space-x-2">
-							<span className="text-sm font-medium">Size:</span>
-							<span className="text-sm">{formatSize(response.size)}</span>
+						<div className="response-viewer-status-item">
+							<span className="response-viewer-status-label">Size:</span>
+							<span className="response-viewer-status-value">{formatSize(response.size)}</span>
 						</div>
 					</div>
-					<div className="flex items-center space-x-2">
+					<div className="response-viewer-actions">
 						<button
 							onClick={() => copyToClipboard(activeTab === 'body' ? formatJson(response.data) : JSON.stringify(response.headers, null, 2))}
-							className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+							className="response-viewer-action-btn"
 							title="Copy to Clipboard"
 						>
 							<Copy size={16} />
 						</button>
 						<button
-							className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+							className="response-viewer-action-btn"
 							title="Download"
 						>
 							<Download size={16} />
@@ -100,20 +101,16 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 				</div>
 			</div>
 
-			<div className="flex border-b border-gray-200 dark:border-gray-700">
+			<div className="response-viewer-tabs">
 				{(['body', 'headers'] as const).map((tab) => (
 					<button
 						key={tab}
 						onClick={() => setActiveTab(tab)}
-						className={`px-4 py-2 text-sm font-medium capitalize ${
-							activeTab === tab
-								? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-								: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-						}`}
+						className={`response-viewer-tab ${activeTab === tab ? 'response-viewer-tab-active' : 'response-viewer-tab-inactive'}`}
 					>
 						{tab}
 						{tab === 'headers' && (
-							<span className="ml-1 text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
+							<span className="response-viewer-tab-badge">
 								{Object.keys(response.headers).length}
 							</span>
 						)}
@@ -121,32 +118,36 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 				))}
 			</div>
 
-			<div className="flex-1 overflow-auto">
+			<div className="response-viewer-content">
 				{activeTab === 'body' && (
-					<div className="p-4">
-						<pre className="text-sm font-mono whitespace-pre-wrap break-words">
-							{formatJson(response.data)}
-						</pre>
+					<div className="response-viewer-tab-panel">
+						<div className="response-viewer-tab-content">
+							<pre className="response-viewer-body-content">
+								{formatJson(response.data)}
+							</pre>
+						</div>
 					</div>
 				)}
 
 				{activeTab === 'headers' && (
-					<div className="p-4">
-						<div className="space-y-2">
-							{Object.entries(response.headers).map(([key, value]) => (
-								<div key={key} className="flex">
-									<div className="w-1/3 font-medium text-sm pr-4 break-words">
-										{key}:
+					<div className="response-viewer-tab-panel">
+						<div className="response-viewer-tab-content">
+							<div className="response-viewer-headers-list">
+								{Object.entries(response.headers).map(([key, value]) => (
+									<div key={key} className="response-viewer-header-row">
+										<div className="response-viewer-header-key">
+											{key}:
+										</div>
+										<div className="response-viewer-header-value">
+											{value}
+										</div>
 									</div>
-									<div className="flex-1 text-sm break-words">
-										{value}
-									</div>
-								</div>
-							))}
-							
-							{Object.keys(response.headers).length === 0 && (
-								<p className="text-gray-500 dark:text-gray-400 text-sm">No headers</p>
-							)}
+								))}
+								
+								{Object.keys(response.headers).length === 0 && (
+									<p className="response-viewer-headers-empty">No headers</p>
+								)}
+							</div>
 						</div>
 					</div>
 				)}

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import '../styles/theme-provider.css';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -62,7 +63,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 			setTheme: handleSetTheme,
 			toggleTheme
 		}}>
-			{children}
+			<div className={`theme-transition ${theme === 'system' ? 'system-theme' : ''}`}>
+				{children}
+			</div>
 		</ThemeContext.Provider>
 	);
 }
