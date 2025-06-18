@@ -30,6 +30,63 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 		}
 	};
 
+	const handleDownload = () => {
+		if (!response) return;
+		
+		let content = '';
+		let fileName = '';
+		let mimeType = 'text/plain';
+		
+		if (activeTab === 'body') {
+			// Figure out what type of content this is
+			const contentType = response.headers['content-type'] || response.headers['Content-Type'] || '';
+			
+			if (contentType.includes('application/json')) {
+				content = formatJson(response.data);
+				fileName = 'response-body.json';
+				mimeType = 'application/json';
+			} else if (contentType.includes('text/html')) {
+				content = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+				fileName = 'response-body.html';
+				mimeType = 'text/html';
+			} else if (contentType.includes('text/xml') || contentType.includes('application/xml')) {
+				content = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+				fileName = 'response-body.xml';
+				mimeType = 'text/xml';
+			} else if (contentType.includes('text/')) {
+				content = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+				fileName = 'response-body.txt';
+				mimeType = 'text/plain';
+			} else {
+				// Fallback to json format for unknown types
+				content = formatJson(response.data);
+				fileName = 'response-body.json';
+				mimeType = 'application/json';
+			}
+		} else {
+			content = JSON.stringify(response.headers, null, 2);
+			fileName = 'response-headers.json';
+			mimeType = 'application/json';
+		}
+		
+		const now = new Date();
+		const timeStr = now.toISOString().replace(/:/g, '-').split('.')[0];
+		const ext = fileName.split('.').pop();
+		fileName = fileName.replace(`.${ext}`, `-${timeStr}.${ext}`);
+		
+		const blob = new Blob([content], { type: mimeType });
+		const url = window.URL.createObjectURL(blob);
+		
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', fileName);
+		document.body.appendChild(link);
+		link.click();
+		
+		document.body.removeChild(link);
+		window.URL.revokeObjectURL(url);
+	};
+
 	const getStatusClass = (status: number) => {
 		if (status >= 200 && status < 300) return 'status-2xx';
 		if (status >= 300 && status < 400) return 'status-3xx';
@@ -85,13 +142,17 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 					</div>
 					<div className="response-viewer-actions">
 						<button
-							onClick={() => copyToClipboard(activeTab === 'body' ? formatJson(response.data) : JSON.stringify(response.headers, null, 2))}
+							onClick={() => {
+								const textToCopy = activeTab === 'body' ? formatJson(response.data) : JSON.stringify(response.headers, null, 2);
+								copyToClipboard(textToCopy);
+							}}
 							className="response-viewer-action-btn"
 							title="Copy to Clipboard"
 						>
 							<Copy size={16} />
 						</button>
 						<button
+							onClick={handleDownload}
 							className="response-viewer-action-btn"
 							title="Download"
 						>
