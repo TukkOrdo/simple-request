@@ -24,7 +24,6 @@
 	border: 1px solid var(--color-border);
 	border-radius: 0.375rem;
 	background-color: var(--color-input);
-	font-size: 0.875rem;
 }
 
 .request-builder-url-row {
@@ -230,7 +229,6 @@
 
 .request-builder-label {
 	display: block;
-	font-size: 0.875rem;
 	font-weight: 500;
 	margin-bottom: 0.25rem;
 }
@@ -245,7 +243,6 @@
 	border: 1px solid var(--color-border);
 	border-radius: 0.375rem;
 	background-color: var(--color-input);
-	font-size: 0.875rem;
 }
 
 .request-builder-password-toggle {
