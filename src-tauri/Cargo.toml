@@ -2,7 +2,7 @@
 name = "simple-request"
 version = "1.0.2"
 description = "A lightweight API client"
-authors = ["you"]
+authors = ["Jordan Cooper"]
 license = "GPL-3.0"
 repository = ""
 edition = "2021"
