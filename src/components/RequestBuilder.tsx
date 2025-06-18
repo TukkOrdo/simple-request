@@ -381,6 +381,78 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 									</div>
 								</div>
 							)}
+
+							{request.auth?.type === 'api-key' && (
+								<div className="request-builder-form-group">
+									<div className="request-builder-form-item">
+										<label className="request-builder-label">Key</label>
+										<input
+											type="text"
+											value={request.auth.apiKey?.key || ''}
+											onChange={(e) => updateRequest({
+												auth: { 
+													type: 'api-key',
+													apiKey: { 
+														key: e.target.value, 
+														value: request.auth?.apiKey?.value || '',
+														in: request.auth?.apiKey?.in || 'header'
+													} 
+												}
+											})}
+											className="form-input"
+											placeholder="API Key name"
+										/>
+									</div>
+									<div className="request-builder-form-item">
+										<label className="request-builder-label">Value</label>
+										<div className="request-builder-password-container">
+											<input
+												type={showPassword ? 'text' : 'password'}
+												value={request.auth.apiKey?.value || ''}
+												onChange={(e) => updateRequest({
+													auth: { 
+														type: 'api-key',
+														apiKey: { 
+															key: request.auth?.apiKey?.key || '', 
+															value: e.target.value,
+															in: request.auth?.apiKey?.in || 'header'
+														} 
+													}
+												})}
+												className="request-builder-password-input"
+												placeholder="API Key value"
+											/>
+											<button
+												type="button"
+												onClick={() => setShowPassword(!showPassword)}
+												className="request-builder-password-toggle"
+											>
+												{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+											</button>
+										</div>
+									</div>
+									<div className="request-builder-form-item">
+										<label className="request-builder-label">Add to</label>
+										<select
+											value={request.auth.apiKey?.in || 'header'}
+											onChange={(e) => updateRequest({
+												auth: { 
+													type: 'api-key',
+													apiKey: { 
+														key: request.auth?.apiKey?.key || '', 
+														value: request.auth?.apiKey?.value || '',
+														in: e.target.value as 'header' | 'query'
+													} 
+												}
+											})}
+											className="form-input"
+										>
+											<option value="header">Header</option>
+											<option value="query">Query Params</option>
+										</select>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 				)}
