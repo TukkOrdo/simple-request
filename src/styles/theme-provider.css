@@ -1,0 +1,45 @@
+.theme-toggle-btn {
+	color: var(--color-muted-foreground);
+	padding: 0.5rem;
+	border-radius: 0.375rem;
+	cursor: pointer;
+	transition: all 0.2s;
+	border: none;
+	background: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+	background-color: var(--color-accent);
+	color: var(--color-foreground);
+}
+
+.theme-toggle-btn:focus {
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
+}
+
+/* Theme transition */
+.theme-transition {
+	transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark mode overrides */
+.dark .theme-transition {
+	transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* System theme detection */
+@media (prefers-color-scheme: dark) {
+	.system-theme {
+		color-scheme: dark;
+	}
+}
+
+@media (prefers-color-scheme: light) {
+	.system-theme {
+		color-scheme: light;
+	}
+}

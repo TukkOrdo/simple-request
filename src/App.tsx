@@ -7,6 +7,7 @@ import { ResponseViewer } from './components/ResponseViewer';
 import { ThemeProvider, useTheme } from './components/ThemeProvider';
 import { Menu, Settings, Plus } from 'lucide-react';
 import './styles/globals.css';
+import './styles/index.css';
 
 function AppContent() {
 	const { theme, toggleTheme } = useTheme();
@@ -130,30 +131,30 @@ function AppContent() {
 	};
 
 	return (
-		<div className={`flex h-screen ${theme === 'dark' ? 'dark' : ''}`}>
-			<div className="flex h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-				<div className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-					<div className="flex items-center justify-between px-4 py-2">
-						<div className="flex items-center space-x-2">
+		<div className={`app-container ${theme === 'dark' ? 'dark' : ''}`}>
+			<div className="app-content">
+				<div className="app-header">
+					<div className="app-header-content">
+						<div className="app-logo-section">
 							<button
 								onClick={() => setSidebarOpen(!sidebarOpen)}
-								className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+								className="icon-btn-secondary"
 							>
 								<Menu size={20} />
 							</button>
-							<h1 className="text-lg font-semibold">Simple Request</h1>
+							<h1 className="app-title">Simple Request</h1>
 						</div>
-						<div className="flex items-center space-x-2">
+						<div className="app-controls">
 							<button
 								onClick={createNewCollection}
-								className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+								className="icon-btn-secondary"
 								title="New Collection"
 							>
 								<Plus size={20} />
 							</button>
 							<button
 								onClick={toggleTheme}
-								className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+								className="icon-btn-secondary"
 								title="Toggle Theme"
 							>
 								<Settings size={20} />
@@ -162,36 +163,38 @@ function AppContent() {
 					</div>
 				</div>
 
-				<div className="flex w-full pt-12">
+				<div className="app-main">
 					{sidebarOpen && (
-						<CollectionSidebar
-							collections={collections}
-							activeCollection={activeCollection}
-							activeRequest={activeRequest}
-							onCollectionSelect={setActiveCollection}
-							onRequestSelect={setActiveRequest}
-							onNewRequest={createNewRequest}
-							onDeleteRequest={(requestId: string) => {
-								if (!activeCollection) return;
-								const updatedCollection = {
-									...activeCollection,
-									requests: activeCollection.requests.filter(req => req.id !== requestId),
-									updatedAt: new Date().toISOString()
-								};
-								setActiveCollection(updatedCollection);
-								if (activeRequest?.id === requestId) {
-									setActiveRequest(null);
-									setResponse(null);
-								}
-								saveCollection(updatedCollection);
-							}}
-						/>
+						<div className="flex-shrink-0">
+							<CollectionSidebar
+								collections={collections}
+								activeCollection={activeCollection}
+								activeRequest={activeRequest}
+								onCollectionSelect={setActiveCollection}
+								onRequestSelect={setActiveRequest}
+								onNewRequest={createNewRequest}
+								onDeleteRequest={(requestId: string) => {
+									if (!activeCollection) return;
+									const updatedCollection = {
+										...activeCollection,
+										requests: activeCollection.requests.filter(req => req.id !== requestId),
+										updatedAt: new Date().toISOString()
+									};
+									setActiveCollection(updatedCollection);
+									if (activeRequest?.id === requestId) {
+										setActiveRequest(null);
+										setResponse(null);
+									}
+									saveCollection(updatedCollection);
+								}}
+							/>
+						</div>
 					)}
 
-					<div className="flex-1 flex flex-col">
+					<div className="content-panel">
 						{activeRequest ? (
 							<>
-								<div className="flex-1 border-b border-gray-200 dark:border-gray-700">
+								<div className="content-split">
 									<RequestBuilder
 										request={activeRequest}
 										onRequestChange={updateRequest}
@@ -199,21 +202,21 @@ function AppContent() {
 										loading={loading}
 									/>
 								</div>
-								<div className="flex-1">
+								<div className="content-area">
 									<ResponseViewer response={response} loading={loading} />
 								</div>
 							</>
 						) : (
-							<div className="flex-1 flex items-center justify-center">
-								<div className="text-center">
-									<h2 className="text-xl font-medium mb-2">No request selected</h2>
-									<p className="text-gray-500 dark:text-gray-400 mb-4">
+							<div className="empty-state">
+								<div className="empty-state-content">
+									<h2 className="empty-state-title">No request selected</h2>
+									<p className="empty-state-description">
 										Select a request from the sidebar or create a new one
 									</p>
 									<button
 										onClick={createNewRequest}
 										disabled={!activeCollection}
-										className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+										className="btn-primary"
 									>
 										Create New Request
 									</button>

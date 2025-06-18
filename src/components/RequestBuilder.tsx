@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ApiRequest, HttpMethod, RequestHeader, QueryParam } from '../types/api';
 import { Play, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import '../styles/index.css';
 
 interface RequestBuilderProps {
 	request: ApiRequest;
@@ -66,23 +67,23 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 	};
 
 	return (
-		<div className="flex flex-col h-full">
-			<div className="p-4 border-b border-gray-200 dark:border-gray-700">
-				<div className="flex items-center space-x-2 mb-3">
+		<div className="request-builder-container">
+			<div className="request-builder-header">
+				<div className="request-builder-name-row">
 					<input
 						type="text"
 						value={request.name}
 						onChange={(e) => updateRequest({ name: e.target.value })}
-						className="flex-1 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
+						className="request-builder-name-input"
 						placeholder="Request name"
 					/>
 				</div>
 				
-				<div className="flex items-center space-x-2">
+				<div className="request-builder-url-row">
 					<select
 						value={request.method}
 						onChange={(e) => updateRequest({ method: e.target.value as HttpMethod })}
-						className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 font-medium"
+						className="request-builder-method-select"
 					>
 						{methods.map(method => (
 							<option key={method} value={method}>{method}</option>
@@ -94,14 +95,14 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 						value={request.url}
 						onChange={(e) => updateRequest({ url: e.target.value })}
 						onKeyDown={handleKeyPress}
-						className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+						className="request-builder-url-input"
 						placeholder="Enter request URL"
 					/>
 					
 					<button
 						onClick={onExecute}
 						disabled={!request.url || loading}
-						className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+						className="request-builder-send-btn"
 					>
 						<Play size={16} />
 						<span>{loading ? 'Sending...' : 'Send'}</span>
@@ -109,25 +110,25 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 				</div>
 			</div>
 
-			<div className="flex border-b border-gray-200 dark:border-gray-700">
+			<div className="request-builder-tabs">
 				{(['params', 'headers', 'body', 'auth'] as const).map((tab) => (
 					<button
 						key={tab}
 						onClick={() => setActiveTab(tab)}
-						className={`px-4 py-2 text-sm font-medium capitalize ${
+						className={`request-builder-tab ${
 							activeTab === tab
-								? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-								: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+								? 'request-builder-tab-active'
+								: 'request-builder-tab-inactive'
 						}`}
 					>
 						{tab}
 						{tab === 'params' && request.queryParams.length > 0 && (
-							<span className="ml-1 text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
+							<span className="request-builder-tab-badge">
 								{request.queryParams.filter(p => p.enabled).length}
 							</span>
 						)}
 						{tab === 'headers' && request.headers.length > 0 && (
-							<span className="ml-1 text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
+							<span className="request-builder-tab-badge">
 								{request.headers.filter(h => h.enabled).length}
 							</span>
 						)}
@@ -135,242 +136,252 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 				))}
 			</div>
 
-			<div className="flex-1 overflow-auto">
+			<div className="request-builder-content">
 				{activeTab === 'params' && (
-					<div className="p-4">
-						<div className="flex justify-between items-center mb-3">
-							<h3 className="text-sm font-medium">Query Parameters</h3>
-							<button
-								onClick={addQueryParam}
-								className="text-blue-500 hover:text-blue-600 text-sm flex items-center space-x-1"
-							>
-								<Plus size={16} />
-								<span>Add</span>
-							</button>
-						</div>
-						
-						<div className="space-y-2">
-							{request.queryParams.map((param, index) => (
-								<div key={index} className="flex items-center space-x-2">
-									<input
-										type="checkbox"
-										checked={param.enabled}
-										onChange={(e) => updateQueryParam(index, { ...param, enabled: e.target.checked })}
-										className="w-4 h-4"
-									/>
-									<input
-										type="text"
-										value={param.key}
-										onChange={(e) => updateQueryParam(index, { ...param, key: e.target.value })}
-										className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-										placeholder="Key"
-									/>
-									<input
-										type="text"
-										value={param.value}
-										onChange={(e) => updateQueryParam(index, { ...param, value: e.target.value })}
-										className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-										placeholder="Value"
-									/>
-									<button
-										onClick={() => removeQueryParam(index)}
-										className="text-red-500 hover:text-red-600 p-1"
-									>
-										<Trash2 size={16} />
-									</button>
-								</div>
-							))}
+					<div className="request-builder-tab-panel">
+						<div className="request-builder-tab-content">
+							<div className="request-builder-section-header">
+								<h3 className="request-builder-section-title">Query Parameters</h3>
+								<button
+									onClick={addQueryParam}
+									className="request-builder-add-btn"
+								>
+									<Plus size={16} />
+									<span>Add</span>
+								</button>
+							</div>
 							
-							{request.queryParams.length === 0 && (
-								<p className="text-gray-500 dark:text-gray-400 text-sm">No query parameters</p>
-							)}
+							<div className="request-builder-items">
+								{request.queryParams.map((param, index) => (
+									<div key={index} className="request-builder-item-row">
+										<input
+											type="checkbox"
+											checked={param.enabled}
+											onChange={(e) => updateQueryParam(index, { ...param, enabled: e.target.checked })}
+											className="request-builder-checkbox"
+										/>
+										<input
+											type="text"
+											value={param.key}
+											onChange={(e) => updateQueryParam(index, { ...param, key: e.target.value })}
+											className="request-builder-input-small"
+											placeholder="Key"
+										/>
+										<input
+											type="text"
+											value={param.value}
+											onChange={(e) => updateQueryParam(index, { ...param, value: e.target.value })}
+											className="request-builder-input-small"
+											placeholder="Value"
+										/>
+										<button
+											onClick={() => removeQueryParam(index)}
+											className="request-builder-delete-btn"
+										>
+											<Trash2 size={16} />
+										</button>
+									</div>
+								))}
+								
+								{request.queryParams.length === 0 && (
+									<p className="request-builder-empty-text">No query parameters</p>
+								)}
+							</div>
 						</div>
 					</div>
 				)}
 
 				{activeTab === 'headers' && (
-					<div className="p-4">
-						<div className="flex justify-between items-center mb-3">
-							<h3 className="text-sm font-medium">Headers</h3>
-							<button
-								onClick={addHeader}
-								className="text-blue-500 hover:text-blue-600 text-sm flex items-center space-x-1"
-							>
-								<Plus size={16} />
-								<span>Add</span>
-							</button>
-						</div>
-						
-						<div className="space-y-2">
-							{request.headers.map((header, index) => (
-								<div key={index} className="flex items-center space-x-2">
-									<input
-										type="checkbox"
-										checked={header.enabled}
-										onChange={(e) => updateHeader(index, { ...header, enabled: e.target.checked })}
-										className="w-4 h-4"
-									/>
-									<input
-										type="text"
-										value={header.key}
-										onChange={(e) => updateHeader(index, { ...header, key: e.target.value })}
-										className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-										placeholder="Header name"
-									/>
-									<input
-										type="text"
-										value={header.value}
-										onChange={(e) => updateHeader(index, { ...header, value: e.target.value })}
-										className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-										placeholder="Header value"
-									/>
-									<button
-										onClick={() => removeHeader(index)}
-										className="text-red-500 hover:text-red-600 p-1"
-									>
-										<Trash2 size={16} />
-									</button>
-								</div>
-							))}
+					<div className="request-builder-tab-panel">
+						<div className="request-builder-tab-content">
+							<div className="request-builder-section-header">
+								<h3 className="request-builder-section-title">Headers</h3>
+								<button
+									onClick={addHeader}
+									className="request-builder-add-btn"
+								>
+									<Plus size={16} />
+									<span>Add</span>
+								</button>
+							</div>
 							
-							{request.headers.length === 0 && (
-								<p className="text-gray-500 dark:text-gray-400 text-sm">No headers</p>
-							)}
+							<div className="request-builder-items">
+								{request.headers.map((header, index) => (
+									<div key={index} className="request-builder-item-row">
+										<input
+											type="checkbox"
+											checked={header.enabled}
+											onChange={(e) => updateHeader(index, { ...header, enabled: e.target.checked })}
+											className="request-builder-checkbox"
+										/>
+										<input
+											type="text"
+											value={header.key}
+											onChange={(e) => updateHeader(index, { ...header, key: e.target.value })}
+											className="request-builder-input-small"
+											placeholder="Header name"
+										/>
+										<input
+											type="text"
+											value={header.value}
+											onChange={(e) => updateHeader(index, { ...header, value: e.target.value })}
+											className="request-builder-input-small"
+											placeholder="Header value"
+										/>
+										<button
+											onClick={() => removeHeader(index)}
+											className="request-builder-delete-btn"
+										>
+											<Trash2 size={16} />
+										</button>
+									</div>
+								))}
+								
+								{request.headers.length === 0 && (
+									<p className="request-builder-empty-text">No headers</p>
+								)}
+							</div>
 						</div>
 					</div>
 				)}
 
 				{activeTab === 'body' && (
-					<div className="p-4">
-						<div className="mb-3">
-							<h3 className="text-sm font-medium mb-2">Request Body</h3>
-							<select
-								value={request.body?.type || 'none'}
-								onChange={(e) => updateRequest({
-									body: { 
-										type: e.target.value as 'none' | 'json' | 'form-data' | 'x-www-form-urlencoded' | 'raw', 
-										content: request.body?.content || '' 
-									}
-								})}
-								className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-							>
-								<option value="none">None</option>
-								<option value="json">JSON</option>
-								<option value="raw">Raw</option>
-								<option value="form-data">Form Data</option>
-								<option value="x-www-form-urlencoded">URL Encoded</option>
-							</select>
+					<div className="request-builder-tab-panel">
+						<div className="request-builder-tab-content">
+							<div className="mb-3">
+								<h3 className="request-builder-section-title mb-2">Request Body</h3>
+								<select
+									value={request.body?.type || 'none'}
+									onChange={(e) => updateRequest({
+										body: { 
+											type: e.target.value as 'none' | 'json' | 'form-data' | 'x-www-form-urlencoded' | 'raw', 
+											content: request.body?.content || '' 
+										}
+									})}
+									className="request-builder-body-type-select"
+								>
+									<option value="none">None</option>
+									<option value="json">JSON</option>
+									<option value="raw">Raw</option>
+									<option value="form-data">Form Data</option>
+									<option value="x-www-form-urlencoded">URL Encoded</option>
+								</select>
+							</div>
+							
+							{request.body?.type && request.body.type !== 'none' && (
+								<textarea
+									value={request.body.content}
+									onChange={(e) => updateRequest({
+										body: { type: request.body!.type, content: e.target.value }
+									})}
+									className="request-builder-textarea"
+									placeholder={request.body.type === 'json' ? '{\n  "key": "value"\n}' : 'Request body content'}
+								/>
+							)}
 						</div>
-						
-						{request.body?.type && request.body.type !== 'none' && (
-							<textarea
-								value={request.body.content}
-								onChange={(e) => updateRequest({
-									body: { type: request.body!.type, content: e.target.value }
-								})}
-								className="w-full h-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm font-mono"
-								placeholder={request.body.type === 'json' ? '{\n  "key": "value"\n}' : 'Request body content'}
-							/>
-						)}
 					</div>
 				)}
 
 				{activeTab === 'auth' && (
-					<div className="p-4">
-						<div className="mb-3">
-							<h3 className="text-sm font-medium mb-2">Authentication</h3>
-							<select
-								value={request.auth?.type || 'none'}
-								onChange={(e) => updateRequest({
-									auth: { 
-										type: e.target.value as 'none' | 'bearer' | 'basic' | 'api-key'
-									}
-								})}
-								className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-							>
-								<option value="none">No Auth</option>
-								<option value="bearer">Bearer Token</option>
-								<option value="basic">Basic Auth</option>
-								<option value="api-key">API Key</option>
-							</select>
-						</div>
-						
-						{request.auth?.type === 'bearer' && (
-							<div>
-								<label className="block text-sm font-medium mb-1">Bearer Token</label>
-								<div className="relative">
-									<input
-										type={showPassword ? 'text' : 'password'}
-										value={request.auth.bearerToken || ''}
-										onChange={(e) => updateRequest({
-											auth: { 
-												type: 'bearer',
-												bearerToken: e.target.value 
-											}
-										})}
-										className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-										placeholder="Enter bearer token"
-									/>
-									<button
-										type="button"
-										onClick={() => setShowPassword(!showPassword)}
-										className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-									>
-										{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-									</button>
-								</div>
+					<div className="request-builder-tab-panel">
+						<div className="request-builder-tab-content">
+							<div className="mb-3">
+								<h3 className="request-builder-section-title mb-2">Authentication</h3>
+								<select
+									value={request.auth?.type || 'none'}
+									onChange={(e) => updateRequest({
+										auth: { 
+											type: e.target.value as 'none' | 'bearer' | 'basic' | 'api-key'
+										}
+									})}
+									className="request-builder-body-type-select"
+								>
+									<option value="none">No Auth</option>
+									<option value="bearer">Bearer Token</option>
+									<option value="basic">Basic Auth</option>
+									<option value="api-key">API Key</option>
+								</select>
 							</div>
-						)}
-						
-						{request.auth?.type === 'basic' && (
-							<div className="space-y-3">
-								<div>
-									<label className="block text-sm font-medium mb-1">Username</label>
-									<input
-										type="text"
-										value={request.auth.basicAuth?.username || ''}
-										onChange={(e) => updateRequest({
-											auth: { 
-												type: 'basic',
-												basicAuth: { 
-													username: e.target.value, 
-													password: request.auth?.basicAuth?.password || '' 
-												} 
-											}
-										})}
-										className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-										placeholder="Username"
-									/>
+							
+							{request.auth?.type === 'bearer' && (
+								<div className="request-builder-form-group">
+									<div className="request-builder-form-item">
+										<label className="request-builder-label">Bearer Token</label>
+										<div className="request-builder-password-container">
+											<input
+												type={showPassword ? 'text' : 'password'}
+												value={request.auth.bearerToken || ''}
+												onChange={(e) => updateRequest({
+													auth: { 
+														type: 'bearer',
+														bearerToken: e.target.value 
+													}
+												})}
+												className="request-builder-password-input"
+												placeholder="Enter bearer token"
+											/>
+											<button
+												type="button"
+												onClick={() => setShowPassword(!showPassword)}
+												className="request-builder-password-toggle"
+											>
+												{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+											</button>
+										</div>
+									</div>
 								</div>
-								<div>
-									<label className="block text-sm font-medium mb-1">Password</label>
-									<div className="relative">
+							)}
+							
+							{request.auth?.type === 'basic' && (
+								<div className="request-builder-form-group">
+									<div className="request-builder-form-item">
+										<label className="request-builder-label">Username</label>
 										<input
-											type={showPassword ? 'text' : 'password'}
-											value={request.auth.basicAuth?.password || ''}
+											type="text"
+											value={request.auth.basicAuth?.username || ''}
 											onChange={(e) => updateRequest({
 												auth: { 
 													type: 'basic',
 													basicAuth: { 
-														username: request.auth?.basicAuth?.username || '', 
-														password: e.target.value 
+														username: e.target.value, 
+														password: request.auth?.basicAuth?.password || '' 
 													} 
 												}
 											})}
-											className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-sm"
-											placeholder="Password"
+											className="form-input"
+											placeholder="Username"
 										/>
-										<button
-											type="button"
-											onClick={() => setShowPassword(!showPassword)}
-											className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-										>
-											{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-										</button>
+									</div>
+									<div className="request-builder-form-item">
+										<label className="request-builder-label">Password</label>
+										<div className="request-builder-password-container">
+											<input
+												type={showPassword ? 'text' : 'password'}
+												value={request.auth.basicAuth?.password || ''}
+												onChange={(e) => updateRequest({
+													auth: { 
+														type: 'basic',
+														basicAuth: { 
+															username: request.auth?.basicAuth?.username || '', 
+															password: e.target.value 
+														} 
+													}
+												})}
+												className="request-builder-password-input"
+												placeholder="Password"
+											/>
+											<button
+												type="button"
+												onClick={() => setShowPassword(!showPassword)}
+												className="request-builder-password-toggle"
+											>
+												{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+											</button>
+										</div>
 									</div>
 								</div>
-							</div>
-						)}
+							)}
+						</div>
 					</div>
 				)}
 			</div>
