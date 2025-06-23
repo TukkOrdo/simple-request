@@ -4,3 +4,5 @@
 @import './request-builder.css';
 @import './response-viewer.css';
 @import './theme-provider.css';
+@import './sidebar.css';
+@import './secrets.css';

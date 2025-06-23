@@ -1,6 +1,6 @@
 import { Collection, ApiRequest } from '../types/api';
-import { Plus, Trash2, Folder, FileText, Download } from 'lucide-react';
-import { ImportExportActions, createSingleCollectionExporter } from './ImportExportActions';
+import { Plus, Trash2, Folder, FileText } from 'lucide-react';
+import { ImportExportActions } from './ImportExportActions';
 import '../styles/index.css';
 
 interface CollectionSidebarProps {
@@ -11,6 +11,7 @@ interface CollectionSidebarProps {
 	onRequestSelect: (request: ApiRequest) => void;
 	onNewRequest: () => void;
 	onDeleteRequest: (requestId: string) => void;
+	onDeleteCollection: (collectionId: string) => void;
 	onImportCollections?: (collections: Collection[]) => void;
 }
 
@@ -22,6 +23,7 @@ export function CollectionSidebar({
 	onRequestSelect,
 	onNewRequest,
 	onDeleteRequest,
+	onDeleteCollection,
 	onImportCollections
 }: CollectionSidebarProps) {
 	const getMethodClass = (method: string) => {
@@ -69,16 +71,23 @@ export function CollectionSidebar({
 								<Folder size={16} />
 								<span className="sidebar-collection-name">{collection.name}</span>
 							</button>
-							<button
-								onClick={(e) => {
-									e.stopPropagation();
-									createSingleCollectionExporter(collection)();
-								}}
-								className="sidebar-collection-export"
-								title="Export Collection"
-							>
-								<Download size={14} />
-							</button>
+							<div className="sidebar-collection-actions">
+								<ImportExportActions
+									collections={[]}
+									onImport={() => {}}
+									singleCollection={collection}
+								/>
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										onDeleteCollection(collection.id);
+									}}
+									className="sidebar-collection-delete"
+									title="Delete Collection"
+								>
+									<Trash2 size={14} />
+								</button>
+							</div>
 						</div>
 					))}
 				</div>

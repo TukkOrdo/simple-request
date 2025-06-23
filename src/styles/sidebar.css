@@ -69,7 +69,7 @@
 	margin-bottom: 0.5rem;
 }
 
-.sidebar-collection-item:hover .sidebar-collection-export {
+.sidebar-collection-item:hover .sidebar-collection-actions {
 	opacity: 1;
 }
 
@@ -104,16 +104,22 @@
 	white-space: nowrap;
 }
 
-.sidebar-collection-export {
+.sidebar-collection-actions {
+	display: flex;
+	gap: 0.25rem;
 	opacity: 0;
 	transition: opacity 0.2s ease;
+	flex-shrink: 0;
+}
+
+.sidebar-collection-export {
 	padding: 0.25rem;
 	border: none;
 	background: transparent;
 	color: var(--color-muted-foreground);
 	cursor: pointer;
 	border-radius: 0.25rem;
-	flex-shrink: 0;
+	transition: all 0.2s ease;
 }
 
 .sidebar-collection-export:hover {
@@ -121,7 +127,23 @@
 	color: var(--color-foreground);
 }
 
-.sidebar-collection-export:disabled {
+.sidebar-collection-delete {
+	padding: 0.25rem;
+	border: none;
+	background: transparent;
+	color: var(--color-muted-foreground);
+	cursor: pointer;
+	border-radius: 0.25rem;
+	transition: all 0.2s ease;
+}
+
+.sidebar-collection-delete:hover {
+	background-color: var(--color-destructive);
+	color: white;
+}
+
+.sidebar-collection-export:disabled,
+.sidebar-collection-delete:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
