@@ -88,6 +88,24 @@ function AppContent() {
 		await deleteCollection(collectionId);
 	};
 
+	const handleRenameCollection = async (collectionId: string, newName: string) => {
+		const collection = collections.find(c => c.id === collectionId);
+		if (!collection) return;
+
+		const updatedCollection = {
+			...collection,
+			name: newName,
+			updatedAt: new Date().toISOString()
+		};
+
+		await saveCollection(updatedCollection);
+
+		// Update active collection if it's the one being renamed
+		if (activeCollection?.id === collectionId) {
+			setActiveCollection(updatedCollection);
+		}
+	};
+
 	const handleImportCollections = async (importedCollections: Collection[]) => {
 		const processedCollections = importedCollections.map(collection => {
 			// Check if collection name already exists
@@ -261,6 +279,7 @@ function AppContent() {
 									saveCollection(updatedCollection);
 								}}
 								onDeleteCollection={handleDeleteCollection}
+								onRenameCollection={handleRenameCollection}
 								onImportCollections={handleImportCollections}
 							/>
 						</div>
