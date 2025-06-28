@@ -7,6 +7,20 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use reqwest;
 
+mod secret_manager;
+use secret_manager::{
+	AppState,
+	store_secret,
+	get_secret,
+	get_secret_references,
+	delete_secret,
+	store_secret_reference,
+	delete_secret_reference,
+	update_secret_last_used,
+	encrypt_export,
+	decrypt_import,
+};
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct RequestHeader {
 	key: String,
@@ -282,11 +296,21 @@ pub fn run() {
 		.plugin(tauri_plugin_fs::init())
 		.plugin(tauri_plugin_http::init())
 		.plugin(tauri_plugin_shell::init())
+		.manage(AppState::new())
 		.invoke_handler(tauri::generate_handler![
 			load_collections,
 			save_collection,
 			delete_collection,
-			execute_request
+			execute_request,
+			store_secret,
+			get_secret,
+			get_secret_references,
+			delete_secret,
+			store_secret_reference,
+			delete_secret_reference,
+			update_secret_last_used,
+			encrypt_export,
+			decrypt_import,
 		])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");

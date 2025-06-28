@@ -1,5 +1,6 @@
 import { Collection, ApiRequest } from '../types/api';
 import { Plus, Trash2, Folder, FileText } from 'lucide-react';
+import { ImportExportActions } from './ImportExportActions';
 import '../styles/index.css';
 
 interface CollectionSidebarProps {
@@ -10,6 +11,8 @@ interface CollectionSidebarProps {
 	onRequestSelect: (request: ApiRequest) => void;
 	onNewRequest: () => void;
 	onDeleteRequest: (requestId: string) => void;
+	onDeleteCollection: (collectionId: string) => void;
+	onImportCollections?: (collections: Collection[]) => void;
 }
 
 export function CollectionSidebar({
@@ -19,7 +22,9 @@ export function CollectionSidebar({
 	onCollectionSelect,
 	onRequestSelect,
 	onNewRequest,
-	onDeleteRequest
+	onDeleteRequest,
+	onDeleteCollection,
+	onImportCollections
 }: CollectionSidebarProps) {
 	const getMethodClass = (method: string) => {
 		switch (method) {
@@ -34,10 +39,24 @@ export function CollectionSidebar({
 		}
 	};
 
+	const handleImport = (importedCollections: Collection[]) => {
+		if (onImportCollections) {
+			onImportCollections(importedCollections);
+		}
+	};
+
 	return (
 		<div className="sidebar-container">
 			<div className="sidebar-section">
-				<h2 className="sidebar-section-title">Collections</h2>
+				<div className="sidebar-section-header">
+					<h2 className="sidebar-section-title">Collections</h2>
+					<ImportExportActions 
+						collections={collections}
+						onImport={handleImport}
+						className="sidebar-actions"
+					/>
+				</div>
+
 				<div className="sidebar-collections-list">
 					{collections.map((collection) => (
 						<div key={collection.id} className="sidebar-collection-item">
@@ -52,6 +71,23 @@ export function CollectionSidebar({
 								<Folder size={16} />
 								<span className="sidebar-collection-name">{collection.name}</span>
 							</button>
+							<div className="sidebar-collection-actions">
+								<ImportExportActions
+									collections={[]}
+									onImport={() => {}}
+									singleCollection={collection}
+								/>
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										onDeleteCollection(collection.id);
+									}}
+									className="sidebar-collection-delete"
+									title="Delete Collection"
+								>
+									<Trash2 size={14} />
+								</button>
+							</div>
 						</div>
 					))}
 				</div>

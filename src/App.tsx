@@ -43,6 +43,15 @@ function AppContent() {
 		}
 	};
 
+	const deleteCollection = async (collectionId: string) => {
+		try {
+			await invoke('delete_collection', { collectionId });
+			await loadCollections();
+		} catch (error) {
+			console.error('Failed to delete collection:', error);
+		}
+	};
+
 	const createNewCollection = async () => {
 		const newCollection: Collection = {
 			id: crypto.randomUUID(),
@@ -55,6 +64,70 @@ function AppContent() {
 		
 		await saveCollection(newCollection);
 		setActiveCollection(newCollection);
+	};
+
+	const handleDeleteCollection = async (collectionId: string) => {
+		const collectionToDelete = collections.find(c => c.id === collectionId);
+		
+		if (!collectionToDelete) return;
+		
+		const confirmed = window.confirm(
+			`Are you sure you want to delete "${collectionToDelete.name}"? This will also delete all ${collectionToDelete.requests.length} request(s) in this collection. This action cannot be undone.`
+		);
+		
+		if (!confirmed) return;
+		
+		// Clear active states if the deleted collection was active
+		if (activeCollection?.id === collectionId) {
+			setActiveCollection(null);
+			setActiveRequest(null);
+			setResponse(null);
+		}
+		
+		// Delete the collection
+		await deleteCollection(collectionId);
+	};
+
+	const handleImportCollections = async (importedCollections: Collection[]) => {
+		const processedCollections = importedCollections.map(collection => {
+			// Check if collection name already exists
+			const existingCollection = collections.find(c => c.name === collection.name);
+			
+			let finalCollection = { ...collection };
+			
+			if (existingCollection) {
+				finalCollection.name = `${collection.name} (imported)`;
+			}
+			
+			// Generate new IDs to avoid conflicts
+			finalCollection.id = crypto.randomUUID();
+			finalCollection.requests = finalCollection.requests.map(request => ({
+				...request,
+				id: crypto.randomUUID(),
+				collectionId: finalCollection.id,
+				createdAt: request.createdAt || new Date().toISOString(),
+				updatedAt: new Date().toISOString()
+			}));
+			
+			finalCollection.createdAt = collection.createdAt || new Date().toISOString();
+			finalCollection.updatedAt = new Date().toISOString();
+			
+			return finalCollection;
+		});
+
+		// Save all imported collections
+		try {
+			for (const collection of processedCollections) {
+				await saveCollection(collection);
+			}
+			
+			const importedCount = processedCollections.length;
+			const totalRequests = processedCollections.reduce((sum, col) => sum + col.requests.length, 0);
+			alert(`Successfully imported ${importedCount} collection(s) with ${totalRequests} request(s)`);
+		} catch (error) {
+			console.error('Failed to import collections:', error);
+			alert('Failed to import some collections. Please try again.');
+		}
 	};
 
 	const createNewRequest = () => {
@@ -187,6 +260,8 @@ function AppContent() {
 									}
 									saveCollection(updatedCollection);
 								}}
+								onDeleteCollection={handleDeleteCollection}
+								onImportCollections={handleImportCollections}
 							/>
 						</div>
 					)}

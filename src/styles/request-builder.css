@@ -260,3 +260,12 @@
 .request-builder-password-toggle:hover {
 	color: var(--color-foreground);
 }
+
+.request-builder-password-input::-ms-reveal,
+.request-builder-password-input::-webkit-credentials-auto-fill-button {
+	display: none;
+}
+
+.request-builder-password-input::-webkit-password-toggle {
+	display: none;
+}
