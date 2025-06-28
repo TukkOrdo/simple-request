@@ -1,5 +1,6 @@
+import { useState, useRef, useEffect } from 'react';
 import { Collection, ApiRequest } from '../types/api';
-import { Plus, Trash2, Folder, FileText } from 'lucide-react';
+import { Plus, Trash2, Folder, FileText, Edit3 } from 'lucide-react';
 import { ImportExportActions } from './ImportExportActions';
 import '../styles/index.css';
 
@@ -12,6 +13,7 @@ interface CollectionSidebarProps {
 	onNewRequest: () => void;
 	onDeleteRequest: (requestId: string) => void;
 	onDeleteCollection: (collectionId: string) => void;
+	onRenameCollection: (collectionId: string, newName: string) => void;
 	onImportCollections?: (collections: Collection[]) => void;
 }
 
@@ -24,8 +26,20 @@ export function CollectionSidebar({
 	onNewRequest,
 	onDeleteRequest,
 	onDeleteCollection,
+	onRenameCollection,
 	onImportCollections
 }: CollectionSidebarProps) {
+	const [renamingId, setRenamingId] = useState<string | null>(null);
+	const [renameValue, setRenameValue] = useState('');
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (renamingId && inputRef.current) {
+			inputRef.current.focus();
+			inputRef.current.select();
+		}
+	}, [renamingId]);
+
 	const getMethodClass = (method: string) => {
 		switch (method) {
 			case 'GET': return 'method-get';
@@ -45,6 +59,60 @@ export function CollectionSidebar({
 		}
 	};
 
+	const startRename = (collection: Collection) => {
+		setRenamingId(collection.id);
+		setRenameValue(collection.name);
+	};
+
+	const cancelRename = () => {
+		setRenamingId(null);
+		setRenameValue('');
+	};
+
+	const saveRename = () => {
+		if (!renamingId) return;
+
+		const trimmedName = renameValue.trim();
+		
+		// Trim whitespace from the start and end of the name
+		// and check if it's empty
+		if (!trimmedName) {
+			alert('Collection name cannot be empty');
+			return;
+		}
+
+		// Check for duplicates (excluding current collection)
+		const isDuplicate = collections.some(
+			c => c.id !== renamingId && c.name.toLowerCase() === trimmedName.toLowerCase()
+		);
+
+		if (isDuplicate) {
+			alert('A collection with this name already exists');
+			return;
+		}
+
+		onRenameCollection(renamingId, trimmedName);
+		setRenamingId(null);
+		setRenameValue('');
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === 'Enter') {
+			saveRename();
+		} else if (e.key === 'Escape') {
+			cancelRename();
+		}
+	};
+
+	const handleInputBlur = () => {
+		// Small delay to allow click events to register first
+		setTimeout(() => {
+			if (renamingId) {
+				saveRename();
+			}
+		}, 150);
+	};
+
 	return (
 		<div className="sidebar-container">
 			<div className="sidebar-section">
@@ -62,14 +130,29 @@ export function CollectionSidebar({
 						<div key={collection.id} className="sidebar-collection-item">
 							<button
 								onClick={() => onCollectionSelect(collection)}
+								onDoubleClick={() => startRename(collection)}
 								className={`sidebar-collection-button ${
 									activeCollection?.id === collection.id
 										? 'sidebar-collection-active'
 										: 'sidebar-collection-inactive'
 								}`}
+								disabled={renamingId === collection.id}
 							>
 								<Folder size={16} />
-								<span className="sidebar-collection-name">{collection.name}</span>
+								{renamingId === collection.id ? (
+									<input
+										ref={inputRef}
+										type="text"
+										value={renameValue}
+										onChange={(e) => setRenameValue(e.target.value)}
+										onKeyDown={handleKeyDown}
+										onBlur={handleInputBlur}
+										className="sidebar-collection-rename-input"
+										onClick={(e) => e.stopPropagation()}
+									/>
+								) : (
+									<span className="sidebar-collection-name">{collection.name}</span>
+								)}
 							</button>
 							<div className="sidebar-collection-actions">
 								<ImportExportActions
@@ -77,6 +160,16 @@ export function CollectionSidebar({
 									onImport={() => {}}
 									singleCollection={collection}
 								/>
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										startRename(collection);
+									}}
+									className="sidebar-collection-edit"
+									title="Rename Collection"
+								>
+									<Edit3 size={14} />
+								</button>
 								<button
 									onClick={(e) => {
 										e.stopPropagation();
