@@ -17,6 +17,8 @@ I got tired of Postman's bloat and wanted something simple that doesn't require 
 - No telemetry or cloud requirements
 - Portable single executable
 
+<img width="1198" height="826" alt="Untitled" src="https://github.com/user-attachments/assets/efc435b0-44e5-4111-a387-663d3a892724" />
+
 ## Security & Privacy
 
 - Platform keychain integration: API keys and tokens stored securely in your OS keychain (not plain text)
