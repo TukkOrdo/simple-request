@@ -303,17 +303,34 @@ function AppContent() {
 						) : (
 							<div className="empty-state">
 								<div className="empty-state-content">
-									<h2 className="empty-state-title">No request selected</h2>
-									<p className="empty-state-description">
-										Select a request from the sidebar or create a new one
-									</p>
-									<button
-										onClick={createNewRequest}
-										disabled={!activeCollection}
-										className="btn-primary"
-									>
-										Create New Request
-									</button>
+									{collections.length === 0 ? (
+										<>
+											<h2 className="empty-state-title">No collections found</h2>
+											<p className="empty-state-description">
+												Get started by creating your first collection to organize your API requests
+											</p>
+											<button
+												onClick={createNewCollection}
+												className="btn-primary"
+											>
+												Create New Collection
+											</button>
+										</>
+									) : (
+										<>
+											<h2 className="empty-state-title">No request selected</h2>
+											<p className="empty-state-description">
+												Select a request from the sidebar or create a new one
+											</p>
+											<button
+												onClick={createNewRequest}
+												disabled={!activeCollection}
+												className="btn-primary"
+											>
+												Create New Request
+											</button>
+										</>
+									)}
 								</div>
 							</div>
 						)}
