@@ -37,9 +37,11 @@ I got tired of Postman's bloat and wanted something simple that doesn't require 
 
 ## Setup
 
+Compiled binaries and installers can be found [under each release](https://github.com/TukkOrdo/simple-request/releases). These are built via [GitHub Actions](https://github.com/TukkOrdo/simple-request/actions) on release. Alternatively, a build can be created with the below instructions.
+
 ```bash
 # Clone and install
-git clone <repo-url>
+git clone https://github.com/TukkOrdo/simple-request
 cd simple-request
 npm install
 
