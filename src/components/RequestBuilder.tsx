@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ApiRequest, HttpMethod, RequestHeader, QueryParam } from '../types/api';
 import { Play, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { SyntaxHighlighter } from './SyntaxHighlighter';
 import '../styles/index.css';
 
 interface RequestBuilderProps {
@@ -13,6 +14,8 @@ interface RequestBuilderProps {
 export function RequestBuilder({ request, onRequestChange, onExecute, loading }: RequestBuilderProps) {
 	const [activeTab, setActiveTab] = useState<'params' | 'headers' | 'body' | 'auth'>('params');
 	const [showPassword, setShowPassword] = useState(false);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const highlightRef = useRef<HTMLDivElement>(null);
 
 	const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
 
@@ -22,6 +25,13 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 			...updates,
 			updatedAt: new Date().toISOString()
 		});
+	};
+
+	const handleTextareaScroll = () => {
+		if (textareaRef.current && highlightRef.current) {
+			highlightRef.current.scrollTop = textareaRef.current.scrollTop;
+			highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+		}
 	};
 
 	const addQueryParam = () => {
@@ -269,14 +279,28 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 							</div>
 							
 							{request.body?.type && request.body.type !== 'none' && (
-								<textarea
-									value={request.body.content}
-									onChange={(e) => updateRequest({
-										body: { type: request.body!.type, content: e.target.value }
-									})}
-									className="request-builder-textarea"
-									placeholder={request.body.type === 'json' ? '{\n  "key": "value"\n}' : 'Request body content'}
-								/>
+								<div className="request-builder-syntax-editor">
+									<textarea
+										ref={textareaRef}
+										value={request.body.content}
+										onChange={(e) => updateRequest({
+											body: { type: request.body!.type, content: e.target.value }
+										})}
+										onScroll={handleTextareaScroll}
+										className="request-builder-textarea request-builder-syntax-textarea"
+										placeholder={request.body.type === 'json' ? '{\n    "key": "value"\n}' : 'Request body content'}
+									/>
+									<div 
+										ref={highlightRef}
+										className="request-builder-syntax-highlight"
+									>
+										<SyntaxHighlighter 
+											content={request.body.content} 
+											language={request.body.type}
+											showLineNumbers={false}
+										/>
+									</div>
+								</div>
 							)}
 						</div>
 					</div>
