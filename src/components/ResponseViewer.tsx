@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ApiResponse } from '../types/api';
 import { Copy, Download } from 'lucide-react';
+import { SyntaxHighlighter } from './SyntaxHighlighter';
 import '../styles/index.css';
 
 interface ResponseViewerProps {
@@ -20,6 +21,17 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 		} catch {
 			return typeof data === 'string' ? data : JSON.stringify(data);
 		}
+	};
+
+	const getContentType = () => {
+		if (!response) return 'text';
+		
+		const contentType = response.headers['content-type'] || response.headers['Content-Type'] || '';
+		
+		if (contentType.includes('application/json')) return 'json';
+		if (contentType.includes('text/html')) return 'html';
+		if (contentType.includes('text/xml') || contentType.includes('application/xml')) return 'xml';
+		return 'text';
 	};
 
 	const copyToClipboard = async (text: string) => {
@@ -120,6 +132,9 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 		);
 	}
 
+	const contentType = getContentType();
+	const formattedContent = formatJson(response.data);
+
 	return (
 		<div className="response-viewer-container">
 			<div className="response-viewer-header">
@@ -143,7 +158,7 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 					<div className="response-viewer-actions">
 						<button
 							onClick={() => {
-								const textToCopy = activeTab === 'body' ? formatJson(response.data) : JSON.stringify(response.headers, null, 2);
+								const textToCopy = activeTab === 'body' ? formattedContent : JSON.stringify(response.headers, null, 2);
 								copyToClipboard(textToCopy);
 							}}
 							className="response-viewer-action-btn"
@@ -183,9 +198,12 @@ export function ResponseViewer({ response, loading }: ResponseViewerProps) {
 				{activeTab === 'body' && (
 					<div className="response-viewer-tab-panel">
 						<div className="response-viewer-tab-content">
-							<pre className="response-viewer-body-content">
-								{formatJson(response.data)}
-							</pre>
+							<div className="response-viewer-body-content">
+								<SyntaxHighlighter 
+									content={formattedContent} 
+									language={contentType} 
+								/>
+							</div>
 						</div>
 					</div>
 				)}

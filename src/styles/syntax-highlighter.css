@@ -1,0 +1,38 @@
+.syntax-highlighter {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.json-key {
+    color: #22d3ee;
+}
+
+.json-string {
+    color: #4ade80;
+}
+
+.json-boolean {
+    color: #f472b6;
+}
+
+.json-null {
+    color: #94a3b8;
+}
+
+.json-number {
+    color: #fbbf24;
+}
+
+.xml-tag {
+    color: #0ea5e9;
+    font-weight: 500;
+}
+
+.xml-attr-name {
+    color: #dc2626;
+}
+
+.xml-attr-value {
+    color: #16a34a;
+}
