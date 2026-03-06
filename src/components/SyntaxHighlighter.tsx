@@ -95,19 +95,11 @@ const highlightContent = (content: string, language: string): string => {
 
 export function SyntaxHighlighter({ content, language, className = '' }: SyntaxHighlighterProps) {
 	const highlighted = highlightContent(content, language);
-	const lines = highlighted.split('\n');
 
 	return (
-		<div className={`syntax-highlighter ${className}`} style={{ display: 'flex' }}>
-			<div className="syntax-line-numbers" aria-hidden="true">
-				{lines.map((_, i) => (
-					<span key={i}>{i + 1}</span>
-				))}
-			</div>
-			<div
-				className="syntax-highlighter-content"
-				dangerouslySetInnerHTML={{ __html: highlighted }}
-			/>
-		</div>
+		<div
+			className={`syntax-highlighter ${className}`}
+			dangerouslySetInnerHTML={{ __html: highlighted }}
+		/>
 	);
 }
