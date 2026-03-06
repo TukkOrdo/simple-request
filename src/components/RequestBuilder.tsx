@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ApiRequest, HttpMethod, RequestHeader, QueryParam } from '../types/api';
 import { Play, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { SyntaxHighlighter } from './SyntaxHighlighter';
 import '../styles/index.css';
 
 interface RequestBuilderProps {
@@ -13,6 +14,8 @@ interface RequestBuilderProps {
 export function RequestBuilder({ request, onRequestChange, onExecute, loading }: RequestBuilderProps) {
 	const [activeTab, setActiveTab] = useState<'params' | 'headers' | 'body' | 'auth'>('params');
 	const [showPassword, setShowPassword] = useState(false);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
+	const highlightRef = useRef<HTMLDivElement>(null);
 
 	const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
 
@@ -22,6 +25,104 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 			...updates,
 			updatedAt: new Date().toISOString()
 		});
+	};
+
+	const handleTextareaScroll = () => {
+		if (textareaRef.current && highlightRef.current) {
+			highlightRef.current.scrollTop = textareaRef.current.scrollTop;
+			highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+		}
+	};
+
+	const handleBodyKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (e.key === 'Enter') {
+			if (e.ctrlKey || e.metaKey) {
+				onExecute();
+				return;
+			}
+
+			e.preventDefault();
+			const textarea = e.currentTarget;
+			const start = textarea.selectionStart;
+			const lines = textarea.value.substring(0, start).split('\n');
+			const currentLine = lines[lines.length - 1];
+			const indent = currentLine.match(/^(\s*)/)?.[1] ?? '';
+			const newValue =
+				textarea.value.substring(0, start) +
+				'\n' +
+				indent +
+				textarea.value.substring(textarea.selectionEnd);
+			updateRequest({ body: { type: request.body!.type, content: newValue } });
+			requestAnimationFrame(() => {
+				textarea.selectionStart = start + 1 + indent.length;
+				textarea.selectionEnd = start + 1 + indent.length;
+			});
+			return;
+		}
+
+		if (e.key === 'Tab') {
+			e.preventDefault();
+			const textarea = e.currentTarget;
+			const start = textarea.selectionStart;
+			const end = textarea.selectionEnd;
+			const newValue =
+				textarea.value.substring(0, start) +
+				'    ' +
+				textarea.value.substring(end);
+			updateRequest({ body: { type: request.body!.type, content: newValue } });
+			requestAnimationFrame(() => {
+				textarea.selectionStart = start + 4;
+				textarea.selectionEnd = start + 4;
+			});
+			return;
+		}
+
+		if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+			onExecute();
+		}
+
+		if (e.key === 'Backspace') {
+			const textarea = e.currentTarget;
+			const start = textarea.selectionStart;
+			const end = textarea.selectionEnd;
+
+			// Only intercept if no selection and the 4 chars before cursor are spaces
+			if (start === end && start >= 4 && textarea.value.substring(start - 4, start) === '    ') {
+				e.preventDefault();
+				const newValue = textarea.value.substring(0, start - 4) + textarea.value.substring(end);
+				updateRequest({ body: { type: request.body!.type, content: newValue } });
+				requestAnimationFrame(() => {
+					textarea.selectionStart = start - 4;
+					textarea.selectionEnd = start - 4;
+				});
+			}
+			return;
+		}
+
+		if (e.key === '{') {
+			e.preventDefault();
+			const textarea = e.currentTarget;
+			const start = textarea.selectionStart;
+			const end = textarea.selectionEnd;
+
+			// Get current line's indentation
+			const lines = textarea.value.substring(0, start).split('\n');
+			const currentLine = lines[lines.length - 1];
+			const indent = currentLine.match(/^(\s*)/)?.[1] ?? '';
+
+			const insertion = '{\n' + indent + '    \n' + indent + '}';
+			const newValue = textarea.value.substring(0, start) + insertion + textarea.value.substring(end);
+
+			updateRequest({ body: { type: request.body!.type, content: newValue } });
+
+			// Place cursor on the indented middle line
+			requestAnimationFrame(() => {
+				const cursorPos = start + indent.length + 4 + 2; // after '{\n' + indent + '    '
+				textarea.selectionStart = cursorPos;
+				textarea.selectionEnd = cursorPos;
+			});
+			return;
+		}
 	};
 
 	const addQueryParam = () => {
@@ -269,14 +370,29 @@ export function RequestBuilder({ request, onRequestChange, onExecute, loading }:
 							</div>
 							
 							{request.body?.type && request.body.type !== 'none' && (
-								<textarea
-									value={request.body.content}
-									onChange={(e) => updateRequest({
-										body: { type: request.body!.type, content: e.target.value }
-									})}
-									className="request-builder-textarea"
-									placeholder={request.body.type === 'json' ? '{\n  "key": "value"\n}' : 'Request body content'}
-								/>
+								<div className="request-builder-syntax-editor">
+									<textarea
+										ref={textareaRef}
+										value={request.body.content}
+										onChange={(e) => updateRequest({
+											body: { type: request.body!.type, content: e.target.value }
+										})}
+										onScroll={handleTextareaScroll}
+										onKeyDown={handleBodyKeyDown}
+										spellCheck={false}
+										className="request-builder-textarea request-builder-syntax-textarea"
+										placeholder={request.body.type === 'json' ? '{\n    "key": "value"\n}' : 'Request body content'}
+									/>
+									<div 
+										ref={highlightRef}
+										className="request-builder-syntax-highlight"
+									>
+										<SyntaxHighlighter 
+											content={request.body.content} 
+											language={request.body.type}
+										/>
+									</div>
+								</div>
 							)}
 						</div>
 					</div>

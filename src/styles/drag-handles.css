@@ -1,0 +1,79 @@
+.drag-handle {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+	transition: background-color 0.15s ease;
+}
+
+.drag-handle--horizontal {
+	width: 5px;
+	cursor: col-resize;
+	height: 100%;
+	background-color: var(--color-border);
+}
+
+.drag-handle--horizontal:hover,
+.drag-handle--horizontal:active {
+	background-color: var(--color-primary, #6366f1);
+}
+
+.drag-handle--vertical {
+	height: 5px;
+	cursor: row-resize;
+	width: 100%;
+	background-color: var(--color-border);
+}
+
+.drag-handle--vertical:hover,
+.drag-handle--vertical:active {
+	background-color: var(--color-primary, #6366f1);
+}
+
+.drag-handle__grip {
+	border-radius: 9999px;
+	background-color: var(--color-muted-foreground, #888);
+	opacity: 0.5;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+}
+
+.drag-handle--horizontal .drag-handle__grip {
+	width: 3px;
+	height: 24px;
+}
+
+.drag-handle--vertical .drag-handle__grip {
+	width: 24px;
+	height: 3px;
+}
+
+.drag-handle:hover .drag-handle__grip,
+.drag-handle:active .drag-handle__grip {
+	opacity: 1;
+}
+
+.content-split {
+	overflow: hidden;
+	border-bottom: none;
+}
+
+.content-panel {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	min-width: 0;
+}
+
+.app-main > .flex-shrink-0 {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-main > .flex-shrink-0 > * {
+    width: 100% !important;
+    min-width: 0;
+}
