@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Collection, ApiRequest, ApiResponse } from './types/api';
 import { CollectionSidebar } from './components/CollectionSidebar';
 import { RequestBuilder } from './components/RequestBuilder';
 import { ResponseViewer } from './components/ResponseViewer';
 import { ThemeProvider, useTheme } from './components/ThemeProvider';
+import { DragHandle } from './components/DragHandle';
 import { Menu, Settings, Plus } from 'lucide-react';
 import './styles/globals.css';
 import './styles/index.css';
+
+const SIDEBAR_MIN = 180;
+const SIDEBAR_MAX = 520;
+const PANEL_MIN = 120;
 
 function AppContent() {
 	const { theme, toggleTheme } = useTheme();
@@ -17,6 +22,36 @@ function AppContent() {
 	const [response, setResponse] = useState<ApiResponse | null>(null);
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [loading, setLoading] = useState(false);
+
+	// Resizable panel state
+	const [sidebarWidth, setSidebarWidth] = useState(() =>
+		Number(localStorage.getItem('sidebarWidth')) || 240
+	);
+	const [requestPanelHeight, setRequestPanelHeight] = useState(() =>
+		Number(localStorage.getItem('requestPanelHeight')) || 50
+	);
+
+	const handleSidebarResize = useCallback((delta: number) => {
+		setSidebarWidth(prev => {
+			const next = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, prev + delta));
+			localStorage.setItem('sidebarWidth', String(next));
+			return next;
+		});
+	}, []);
+
+	const handleVerticalResize = useCallback((delta: number) => {
+		setRequestPanelHeight(prev => {
+			const contentPanel = document.querySelector('.content-panel') as HTMLElement;
+			if (!contentPanel) return prev;
+			const totalHeight = contentPanel.offsetHeight;
+			const deltaPct = (delta / totalHeight) * 100;
+			const minPct = (PANEL_MIN / totalHeight) * 100;
+			const maxPct = 100 - minPct;
+			const next = Math.min(maxPct, Math.max(minPct, prev + deltaPct));
+			localStorage.setItem('requestPanelHeight', String(next));
+			return next;
+		});
+	}, []);
 
 	useEffect(() => {
 		loadCollections();
@@ -178,7 +213,7 @@ function AppContent() {
 
 		const updatedCollection = {
 			...activeCollection,
-			requests: activeCollection.requests.map(req => 
+			requests: activeCollection.requests.map(req =>
 				req.id === updatedRequest.id ? updatedRequest : req
 			),
 			updatedAt: new Date().toISOString()
@@ -197,21 +232,19 @@ function AppContent() {
 			const startTime = Date.now();
 			const result = await invoke<ApiResponse>('execute_request', { request });
 			const endTime = Date.now();
-			
-			const responseWithTiming = {
+
+			setResponse({
 				...result,
 				responseTime: endTime - startTime,
 				timestamp: new Date().toISOString()
-			};
-
-			setResponse(responseWithTiming);
+			});
 		} catch (error) {
 			console.error('Request failed:', error);
 			setResponse({
 				status: 0,
 				statusText: 'Error',
 				headers: {},
-				data: { error: error },
+				data: { error },
 				responseTime: 0,
 				size: 0,
 				timestamp: new Date().toISOString()
@@ -256,39 +289,49 @@ function AppContent() {
 
 				<div className="app-main">
 					{sidebarOpen && (
-						<div className="flex-shrink-0">
-							<CollectionSidebar
-								collections={collections}
-								activeCollection={activeCollection}
-								activeRequest={activeRequest}
-								onCollectionSelect={setActiveCollection}
-								onRequestSelect={setActiveRequest}
-								onNewRequest={createNewRequest}
-								onDeleteRequest={(requestId: string) => {
-									if (!activeCollection) return;
-									const updatedCollection = {
-										...activeCollection,
-										requests: activeCollection.requests.filter(req => req.id !== requestId),
-										updatedAt: new Date().toISOString()
-									};
-									setActiveCollection(updatedCollection);
-									if (activeRequest?.id === requestId) {
-										setActiveRequest(null);
-										setResponse(null);
-									}
-									saveCollection(updatedCollection);
-								}}
-								onDeleteCollection={handleDeleteCollection}
-								onRenameCollection={handleRenameCollection}
-								onImportCollections={handleImportCollections}
-							/>
-						</div>
+						<>
+							<div
+								className="flex-shrink-0"
+								style={{ width: sidebarWidth, minWidth: SIDEBAR_MIN, maxWidth: SIDEBAR_MAX, height: '100%' }}
+							>
+								<CollectionSidebar
+									collections={collections}
+									activeCollection={activeCollection}
+									activeRequest={activeRequest}
+									onCollectionSelect={setActiveCollection}
+									onRequestSelect={setActiveRequest}
+									onNewRequest={createNewRequest}
+									onDeleteRequest={(requestId: string) => {
+										if (!activeCollection) return;
+										const updatedCollection = {
+											...activeCollection,
+											requests: activeCollection.requests.filter(req => req.id !== requestId),
+											updatedAt: new Date().toISOString()
+										};
+										setActiveCollection(updatedCollection);
+										if (activeRequest?.id === requestId) {
+											setActiveRequest(null);
+											setResponse(null);
+										}
+										saveCollection(updatedCollection);
+									}}
+									onDeleteCollection={handleDeleteCollection}
+									onRenameCollection={handleRenameCollection}
+									onImportCollections={handleImportCollections}
+								/>
+							</div>
+
+							<DragHandle direction="horizontal" onResize={handleSidebarResize} />
+						</>
 					)}
 
 					<div className="content-panel">
 						{activeRequest ? (
 							<>
-								<div className="content-split">
+								<div
+									className="content-split"
+									style={{ height: `${requestPanelHeight}%`, flex: 'none' }}
+								>
 									<RequestBuilder
 										request={activeRequest}
 										onRequestChange={updateRequest}
@@ -296,7 +339,10 @@ function AppContent() {
 										loading={loading}
 									/>
 								</div>
-								<div className="content-area">
+
+								<DragHandle direction="vertical" onResize={handleVerticalResize} />
+
+								<div className="content-area" style={{ flex: 1 }}>
 									<ResponseViewer response={response} loading={loading} />
 								</div>
 							</>
@@ -309,10 +355,7 @@ function AppContent() {
 											<p className="empty-state-description">
 												Get started by creating your first collection to organize your API requests
 											</p>
-											<button
-												onClick={createNewCollection}
-												className="btn-primary"
-											>
+											<button onClick={createNewCollection} className="btn-primary">
 												Create New Collection
 											</button>
 										</>
