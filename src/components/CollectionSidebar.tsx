@@ -204,6 +204,7 @@ export function CollectionSidebar({
 							{activeCollection.requests.map((request) => (
 								<div
 									key={request.id}
+									onClick={() => onRequestSelect(request)}
 									className={`sidebar-request-item group ${
 										activeRequest?.id === request.id
 											? 'sidebar-request-active'
@@ -211,19 +212,19 @@ export function CollectionSidebar({
 									}`}
 								>
 									<FileText size={14} />
-									<button
-										onClick={() => onRequestSelect(request)}
-										className="sidebar-request-content"
-									>
+									<div className="sidebar-request-content">
 										<div className="sidebar-request-info">
 											<span className={`sidebar-request-method ${getMethodClass(request.method)}`}>
 												{request.method}
 											</span>
 											<span className="sidebar-request-name">{request.name}</span>
 										</div>
-									</button>
+									</div>
 									<button
-										onClick={() => onDeleteRequest(request.id)}
+										onClick={(e) => {
+											e.stopPropagation();
+											onDeleteRequest(request.id);
+										}}
 										className="sidebar-request-delete group-hover-show"
 										title="Delete Request"
 									>
