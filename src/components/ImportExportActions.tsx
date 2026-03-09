@@ -46,15 +46,30 @@ export function ImportExportActions({
 			const filename = `${collectionName}${securitySuffix}-${timestamp}.json`;
 			
 			const blob = new Blob([exportData], { type: 'application/json' });
-			const url = URL.createObjectURL(blob);
-			
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = filename;
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
-			URL.revokeObjectURL(url);
+
+			if ('showSaveFilePicker' in window) {
+				try {
+					const fileHandle = await (window as any).showSaveFilePicker({
+						suggestedName: filename,
+						types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }]
+					});
+					const writable = await fileHandle.createWritable();
+					await writable.write(blob);
+					await writable.close();
+				} catch (err: any) {
+					if (err.name === 'AbortError') return;
+					throw err;
+				}
+			} else {
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = filename;
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				URL.revokeObjectURL(url);
+			}
 
 			setShowExportDialog(false);
 		} catch (error) {
@@ -71,24 +86,22 @@ export function ImportExportActions({
 		const file = event.target.files?.[0];
 		if (!file) return;
 
-		console.log('File selected for import:', file.name);
+		if (fileInputRef.current) fileInputRef.current.value = '';
+
 		setImporting(true);
 		try {
 			const text = await file.text();
 			const rawData = JSON.parse(text);
 			
-			console.log('File parsed, encrypted:', rawData.encrypted);
 			if (rawData.encrypted) {
 				setEncryptedFileContent(text);
 				setShowImportPassword(true);
-				setImporting(false);
 				return;
 			}
 
 			const importedCollections = await secretManager.importCollectionsSecurely(text);
 			if (importedCollections.length > 0) {
 				onImport(importedCollections);
-				showImportSuccess(importedCollections);
 			} else {
 				alert('No valid collections found in the file.');
 			}
@@ -97,29 +110,18 @@ export function ImportExportActions({
 			alert('Failed to import collections. Please check the file format.');
 		} finally {
 			setImporting(false);
-			if (fileInputRef.current) {
-				fileInputRef.current.value = '';
-			}
 		}
 	};
 
 	const handleEncryptedImport = async () => {
-		if (!encryptedFileContent || !importPassword) {
-			console.log('Import failed - missing file content or password:', { 
-				hasFileContent: !!encryptedFileContent, 
-				hasPassword: !!importPassword 
-			});
-			return;
-		}
+		if (!encryptedFileContent || !importPassword) return;
 
-		console.log('Starting encrypted import...');
 		setImporting(true);
 		try {
 			const importedCollections = await secretManager.importCollectionsSecurely(encryptedFileContent, importPassword);
 			
 			if (importedCollections.length > 0) {
 				onImport(importedCollections);
-				showImportSuccess(importedCollections);
 				setShowImportPassword(false);
 				setImportPassword('');
 				setEncryptedFileContent('');
@@ -131,28 +133,8 @@ export function ImportExportActions({
 			alert('Failed to decrypt and import collections. Please check your password.');
 		} finally {
 			setImporting(false);
-			if (fileInputRef.current) {
-				fileInputRef.current.value = '';
-			}
+			if (fileInputRef.current) fileInputRef.current.value = '';
 		}
-	};
-
-	const showImportSuccess = (importedCollections: Collection[]) => {
-		const totalRequests = importedCollections.reduce((sum, col) => sum + col.requests.length, 0);
-		const hasSecrets = importedCollections.some(col => 
-			col.requests.some(req => 
-				req.auth?.bearerToken || 
-				req.auth?.basicAuth?.password || 
-				req.auth?.apiKey?.value
-			)
-		);
-		
-		let message = `Successfully imported ${importedCollections.length} collection(s) with ${totalRequests} request(s).`;
-		if (hasSecrets) {
-			message += '\n\nSecrets have been stored securely in your vault.';
-		}
-		
-		alert(message);
 	};
 
 	return (
@@ -202,9 +184,7 @@ export function ImportExportActions({
 						setShowImportPassword(false);
 						setImportPassword('');
 						setEncryptedFileContent('');
-						if (fileInputRef.current) {
-							fileInputRef.current.value = '';
-						}
+						if (fileInputRef.current) fileInputRef.current.value = '';
 					}}
 					importing={importing}
 				/>
@@ -366,14 +346,8 @@ function ImportPasswordDialog({
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === 'Enter' && password.trim() && !importing) {
-			console.log('Enter key pressed, calling onImport');
 			onImport();
 		}
-	};
-
-	const handleImportClick = () => {
-		console.log('Import button clicked');
-		onImport();
 	};
 
 	return (
@@ -428,7 +402,7 @@ function ImportPasswordDialog({
 						</button>
 						<button 
 							type="button" 
-							onClick={handleImportClick} 
+							onClick={onImport} 
 							className="btn-primary"
 							disabled={importing || !password.trim()}
 						>
