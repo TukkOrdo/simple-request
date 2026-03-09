@@ -13,15 +13,6 @@ pub struct SecretReference {
 	pub last_used: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SecretValue {
-	pub id: String,
-	pub name: String,
-	pub value: String,
-	#[serde(rename = "type")]
-	pub secret_type: String,
-}
-
 pub struct AppState {
 	pub secret_references: std::sync::Mutex<Vec<SecretReference>>,
 }
